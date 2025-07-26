@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # Load and clean data
-df = pd.read_csv("your_file.csv")  # Replace with your CSV file
+df = pd.read_csv("financial.csv")  
 df.columns = df.columns.str.strip()
 
 st.title("📊 Financial Data Explorer")
