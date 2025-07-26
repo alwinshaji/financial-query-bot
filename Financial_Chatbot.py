@@ -1,65 +1,60 @@
-import streamlit as st
 import pandas as pd
+import streamlit as st
 
-# Load data
+# Load and preprocess the dataset
 df = pd.read_csv("financial.csv")
+df.columns = df.columns.str.strip()
+df['Fiscal Year'] = df['Fiscal Year'].astype(str).str.strip().str.lower()
+df['Company'] = df['Company'].astype(str).str.strip().str.lower()
+df['Metric'] = df['Metric'].astype(str).str.strip().str.lower()
 
-# Normalize column names
-df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
+st.title("💬 Financial Chatbot")
+st.write("Ask a financial question about a company and year. Use the format shown in the examples below for best results.")
 
-# Info for user
-st.title("📊 Financial Query Bot")
-st.markdown(
-    """
-    Ask simple financial questions about the dataset.
+st.markdown("""
+**Examples** (Click to auto-fill):
+- Apple Net Income 2023
+- Microsoft Revenue 2022
+- Google Net Income 2021
+""")
 
-    **How to use:**
-    - Select a **company**, **fiscal year**, and **question type** below.
-    - Ensure your dataset has columns like: `company`, `fiscal_year`, `revenue`, `net_profit`, etc.
-    - Keep the column names clean (e.g., use underscores instead of spaces).
-    """
-)
-
-# Check expected columns exist
-required_cols = ["company", "fiscal_year"]
-if not all(col in df.columns for col in required_cols):
-    st.error("Dataset must include `company` and `fiscal_year` columns (normalized as lowercase with underscores).")
-    st.stop()
-
-# Dropdowns
-companies = sorted(df["company"].dropna().unique())
-years = sorted(df["fiscal_year"].dropna().unique())
-questions = [
-    "What is the revenue?",
-    "What is the net profit?",
-    "What is the profit margin?",
-    "What are the total expenses?",
+# Predefined questions
+examples = [
+    "Apple Net Income 2023",
+    "Microsoft Revenue 2022",
+    "Google Net Income 2021"
 ]
 
-selected_company = st.selectbox("Select a Company", companies)
-selected_year = st.selectbox("Select a Fiscal Year", years)
-selected_question = st.selectbox("What do you want to know?", questions)
+selected_example = st.selectbox("Or select a predefined question:", [""] + examples)
+user_input = st.text_input("Type your question here 👇", value=selected_example)
 
-# Filter based on selections
-filtered = df[
-    (df["company"] == selected_company) &
-    (df["fiscal_year"] == selected_year)
-]
+# If user typed or selected something
+if user_input:
+    with st.chat_message("user"):
+        st.write(user_input)
 
-# Response logic
-if filtered.empty:
-    st.warning("No data found for this selection.")
-else:
-    row = filtered.iloc[0]
-    if selected_question == "What is the revenue?":
-        st.success(f"📈 Revenue: ₹{row.get('revenue', 'N/A')}")
-    elif selected_question == "What is the net profit?":
-        st.success(f"💰 Net Profit: ₹{row.get('net_profit', 'N/A')}")
-    elif selected_question == "What is the profit margin?":
-        try:
-            profit_margin = (row['net_profit'] / row['revenue']) * 100
-            st.success(f"📊 Profit Margin: {profit_margin:.2f}%")
-        except:
-            st.error("Couldn't calculate profit margin.")
-    elif selected_question == "What are the total expenses?":
-        st.success(f"💸 Total Expenses: ₹{row.get('expenses', 'N/A')}")
+    try:
+        parts = user_input.strip().lower().split()
+        if len(parts) < 3:
+            raise ValueError("Please ask in the format: Company Metric Year")
+
+        company = " ".join(parts[:-2])
+        metric = parts[-2]
+        year = parts[-1]
+
+        result = df[
+            (df['Company'] == company) &
+            (df['Metric'] == metric) &
+            (df['Fiscal Year'] == year)
+        ]
+
+        with st.chat_message("assistant"):
+            if not result.empty:
+                value = result.iloc[0]['Value']
+                st.write(f"{company.title()}'s {metric.title()} in {year}: **{value}**")
+            else:
+                st.write("Sorry, no data found for that query.")
+
+    except Exception as e:
+        with st.chat_message("assistant"):
+            st.write("Please follow the format: Company Metric Year (e.g., 'Apple Net Income 2023')")
