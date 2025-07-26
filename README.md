@@ -60,7 +60,7 @@ This project was completed as part of the **BCG X Data Science Virtual Experienc
 ## 🚀 Running Locally
 
 1. Clone the repo:
-```bash
+   bash
 git clone https://github.com/yourusername/financial-query-chatbot.git
 cd financial-query-chatbot
 
@@ -75,7 +75,8 @@ Pull requests, feature suggestions, and ideas to improve this mini chatbot are a
 ---
 
 📬 Contact
-Feel free to connect with me on LinkedIn.
+Connect with me on [LinkedIn](https://www.linkedin.com/in/alwnshaji)
+
 
 
 
